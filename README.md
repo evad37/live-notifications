@@ -1,25 +1,36 @@
-# modular-wiki-userscript-base
-A base for creating MediaWiki userscripts using ES6 modules
+# Live notifications
+Wikimedia user script to show Echo notification as bubble notifications when they occur (or very soon thereafter)
 
-## How to use
-1. Downloads files and install dependenices
-2. Rename the directory "myscriptname-src", replacing 'myscriptname' with the name of your userscript
-3. Edit package.json:
-   * In the "build:bundle" script, replace 'myscriptname' with the name of the your userscript
-   * Replace other keys as require, e.g. name, verson, description, homepage...
-4. Write your script within the the "`yourScriptName`-src"
-   * You can write in modern javascript
+## Outline of methodology
+*In pseudo-script*
+FUNCTION main():
+   - IF browser tab is active THEN
+      - FETCH unread echo notifications THEN
+         - Filter out already-previewed notifications (maybe by comparing id to those saved in localStorage?)
+      - IF number of not-previewed notification > 0 AND browser tab is active THEN
+         - FOR EACH notification
+            - Show bubble notification preview
+            - Mark notification as previewed (maybe save id to localStorage?)
+      - SLEEP 60 seconds
+      - RUN main
+
+ON load RUN main()
+
+ON browser tab activated RUN main()
+
+## About this repo
+This script is written in modern Javascript, within the "livenotifications-src" folder
    * Modules go in the "/modules" subdirectory, and can use es6 `import` and `export`
-   * index.js is for loading dependencies - typically, ResourceLoader modules and document ready, but other dependencies can go in the Promise.all array
-   * Write your App in App.js, importing modules as required
-   * While Node modules could be imported, their licences (and their dependencies' licences) might not be compatible with your required licence (CC-BY-SA 3.0 for most Wikimedia wikis, like Wikipedia)
-5. Build your app by running `npm build`. This writes two files to the "dist" directory:
+   * index.js is for loading dependencies - ResourceLoader modules, document ready, etc
+   * Main code for the user script is in App.js, which imports modules as required
+
+Build the app by running `npm build`. This writes two files to the "dist" directory:
    1. out.js - Bundled/transpiled version of the code, with an inline sourcemap for debugging with devtools.
-      - You can use this code for the sandbox or testing version of your userscript.
+      - For the sandbox or testing version of the script.
    2. out.min.js - Minified version of out.js, without a sourcemap.
-      - You can use this code for the main version of your userscript (that other users import), in order to reduce file size. Keep in mind that without a sourcemap, debugging could be harder
-6. Commit changes and push to your repository
-7. Deploy to the wiki using `node deploy` (or by manually copy the built files). Or deploy just the sandbox version using `node deploy --sandbox`.
+      - For the main version of your userscript (that other users import), in order to reduce file size. Keep in mind that without a sourcemap, debugging could be harder
+
+Deploy to the wiki using `node deploy` (or by manually copy the built files). Or deploy just the sandbox version using `node deploy --sandbox`.
    - This requires some initial setup before first use:
       1. Set up a bot password from [[Special:BotPasswords]]
       2. Create a file `credentials.json` to store the username and password. This should be a plain JSON file, like:
@@ -30,4 +41,3 @@ A base for creating MediaWiki userscripts using ES6 modules
          }
          ```
          *Do **not** commit this file to your repository!*
-      3. Edit deploy.js, filling in the full page names of the main and sandbox versions of the script in the `SCRIPT_PAGE` and `SCRIPT_SANDBOX_PAGE` constants.

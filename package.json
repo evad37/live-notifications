@@ -1,12 +1,12 @@
 {
-  "name": "modular-wiki-userscript-base",
+  "name": "live-notifications",
   "version": "1.0.0",
-  "description": "Base for creating a modular MediaWiki userscript",
-  "homepage": "https://github.com/evad37/modular-wiki-userscript-base",
+  "description": "Wikimedia user script to show Echo notification as bubble notifications when they occur",
+  "homepage": "https://github.com/evad37/live-notifications",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build:bundle": "browserify myscriptname-src/index.js --debug -t babelify --outfile dist/out.js",
+    "build:bundle": "browserify livenotifications-src/index.js --debug -t babelify --outfile dist/out.js",
     "build:minify": "uglifyjs dist/out.js --compress --output dist/out.min.js",
     "build": "npm run build:bundle && npm run build:minify",
     "deploy:test": "node deploy.js --sandbox",
@@ -21,5 +21,6 @@
     "browserify": "^16.5.1",
     "mwn": "^0.4.0",
     "uglify-js": "^3.9.1"
-  }
+  },
+  "dependencies": {}
 }

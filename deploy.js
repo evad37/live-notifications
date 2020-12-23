@@ -8,8 +8,8 @@ const {exec} = require('child_process');
 const credentials = require('./credentials.json');
 
 // name of the on-wiki script page name
-const SCRIPT_PAGE = '';
-const SCRIPT_SANDBOX_PAGE = '';
+const SCRIPT_PAGE = 'User:Evad37/livenotifications/core.js';
+const SCRIPT_SANDBOX_PAGE = 'User:Evad37/livenotifications/core/sandbox.js';
 
 const sandboxOnly = process.argv[2] === '--sandbox';
 
