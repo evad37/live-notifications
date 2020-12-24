@@ -1,68 +1,94 @@
 const App = () => {
-	const api = new mw.Api();
+	const api = new mw.Api({
+		ajax: {
+			headers: { 
+				"Api-User-Agent": "livenotifications/1.0.0" + 
+					" ( https://en.wikipedia.org/wiki/User:Evad37/livenotifications )"
+			}
+		}
+	});
+	const config = mw.config.get([
+		"wgServer"
+	]);
+	const waitTimeMilliseconds = 1000 * 60;
+	let lastCheckedTimestamp = new Date();
 
 	// Main function for retreiving and displaying notifications
-	function mainloop() {
+	const mainloop = function mainloop() {
+		// Only make the request if the window/tab is active (focused)
 		if ( document.hasFocus() ) {
-			api.get({
-				"action": "query",
-				"format": "json",
-				"formatversion": "2",
-				"meta": "notifications",
-				"notlimit": "20"
-			})
+			api
+				.get({				
+					"action": "query",
+					"format": "json",
+					"formatversion": "2",
+					"curtimestamp": 1,
+					"meta": "notifications",
+					"notfilter": "!read",
+					"notformat": "model",
+					"notlimit": "20"
+				})
 				.then(response => {
+					// Find notifications which are new since the last request
 					const notifications = (response && response.query && response.query.notifications && response.query.notifications.list || [])
-						.filter(notification => notification.id); // FIXME: Filter based on whether that notification has been shown
-					if ( notifications.length > 0 && document.hasFocus() ) {
-						notifications.forEach(notification => {
-							// TODO: Save notification id so it doesn't get re-shown again
+						.filter(notification => lastCheckedTimestamp < new Date(notification.timestamp.utciso8601))
+						.forEach(notification => {
+							const iconFulllUrl = "https:" + config.wgServer + notification["*"].iconUrl;
+							const readableDate = notification.timestamp.utciso8601.replace("T", " ").replace(/:\d\dZ/, " (UTC)");
 							mw.notify(
-								$("<a>").attr({
-									"href":mw.util.getUrl(notification.title.full)
-								}).css({
-									display:"block",
-									width: "100%",
-									height: "100%"
-								}).text(
-									`User:${notification.agent.name} on ${notification.title.text} at ${notification.timestamp.utciso8601}`
+								$("<div>").append(
+									$("<span>")
+										.attr({
+											height: "30px"
+										 })
+										 .css({
+											 float: "right",
+											 "margin-left": "1em"
+										 })
+										 .text("X"),
+									$("<a>")
+										.css({
+											display: "block",
+										})
+										.attr({
+											href: notification["*"].links.primary.url,
+											title: notification["*"].links.primary.label,
+											target: "_blank"
+										})
+										.html(notification["*"].header)
+										.prepend(
+											$("<img>")
+												.css({
+													float: "left",
+													margin: "0.2em 0.5em 0.5em 0"
+												})
+												.attr({
+													src: iconFulllUrl,
+													height: "30px"
+												})
+										)
+										.append(
+											$("<span>")
+												.css({
+													display: "block",
+													color: "#666", "font-size":"88%"
+												})
+												.text(readableDate)
+										)
 								),
 								{
-									title: `${notification.type} ${notification.section}`, // TODO: get the localised message instead of the code for this
-									autoHideSeconds: 30,
-									visibleTimeout: true
-								} ); 
-						})
-					}
+									autoHide: false
+								}
+							); 
+						});
+					// Update the last checked timestamp (for the next request)
+					lastCheckedTimestamp = new Date(response.curtimestamp)
 				})
-				.then(() => {
-					window.setTimeout(mainloop, 1000*60)
-				})
+				.catch((error, details) => console.log("[livenotifications] error", {error, details}));
 		}
 	}
 
-
-	// Check for visibility changes
-	// https://stackoverflow.com/questions/7389328/detect-if-browser-tab-has-focus
-	var hidden, visibilityState, visibilityChange;
-
-	if (typeof document.hidden !== "undefined") {
-	  hidden = "hidden", visibilityChange = "visibilitychange", visibilityState = "visibilityState";
-	} else if (typeof document.msHidden !== "undefined") {
-	  hidden = "msHidden", visibilityChange = "msvisibilitychange", visibilityState = "msVisibilityState";
-	}
-	var document_hidden = document[hidden];
-
-	document.addEventListener(visibilityChange, function() {
-	  if (document_hidden != document[hidden]) {
-		if (!document[hidden]) {
-		  mainloop();
-		}
-		document_hidden = document[hidden];
-	  }
-	});
-
-	mainloop();
+	window.setInterval(() => mainloop(), waitTimeMilliseconds)
 }
 
 export default App;
