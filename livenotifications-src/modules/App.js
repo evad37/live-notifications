@@ -1,3 +1,6 @@
+
+import {makeElement, parseHtml} from "./util";
+
 const App = () => {
 	const api = new mw.Api({
 		ajax: {
@@ -35,51 +38,30 @@ const App = () => {
 						.forEach(notification => {
 							const iconFulllUrl = "https:" + config.wgServer + notification["*"].iconUrl;
 							const readableDate = notification.timestamp.utciso8601.replace("T", " ").replace(/:\d\dZ/, " (UTC)");
-							mw.notify(
-								$("<div>").append(
-									$("<span>")
-										.attr({
-											height: "30px"
-										 })
-										 .css({
-											 float: "right",
-											 "margin-left": "1em"
-										 })
-										 .text("X"),
-									$("<a>")
-										.css({
-											display: "block",
-										})
-										.attr({
-											href: notification["*"].links.primary.url,
-											title: notification["*"].links.primary.label,
-											target: "_blank"
-										})
-										.html(notification["*"].header)
-										.prepend(
-											$("<img>")
-												.css({
-													float: "left",
-													margin: "0.2em 0.5em 0.5em 0"
-												})
-												.attr({
-													src: iconFulllUrl,
-													height: "30px"
-												})
-										)
-										.append(
-											$("<span>")
-												.css({
-													display: "block",
-													color: "#666", "font-size":"88%"
-												})
-												.text(readableDate)
-										)
-								),
-								{
-									autoHide: false
-								}
-							); 
+							const messageDiv = makeElement("div", null, [
+								makeElement("span", {
+									height: "30px",
+									style: "float:right; margin:-0.2em -0.2em 0.2em 0.5em"
+								}, "X"),
+								makeElement("a", {
+									href: notification["*"].links.primary.url,
+									title: notification["*"].links.primary.label,
+									target: "_blank",
+									style: "display:block"
+								}, [
+									makeElement("img", {
+										src: iconFulllUrl,
+										height: "30px",
+										style: "display:block; float:left; margin:0 0.5em 22em -0.5em; color:#666; font-size:88%"
+									}),
+									parseHtml(notification["*"].header),
+									makeElement("span", {
+										style: "display: block; color: #666; font-size:88%"
+									}, readableDate)
+								].flatMap(x=>x) // Flattening in case parseHtml() returns an array
+								)
+							]);
+							mw.notify(messageDiv, {autoHide:false});
 						});
 					// Update the last checked timestamp (for the next request)
 					lastCheckedTimestamp = new Date(response.curtimestamp)
