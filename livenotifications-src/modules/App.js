@@ -1,11 +1,12 @@
 
 import {makeElement, parseHtml} from "./util";
+import spinner from "./spinner";
 
 const App = () => {
 	const api = new mw.Api({
 		ajax: {
 			headers: { 
-				"Api-User-Agent": "livenotifications/1.0.0" + 
+				"Api-User-Agent": "livenotifications/1.1.0" + 
 					" ( https://en.wikipedia.org/wiki/User:Evad37/livenotifications )"
 			}
 		}
@@ -20,7 +21,7 @@ const App = () => {
 	const mainloop = function mainloop() {
 		// Only make the request if the window/tab is active (focused)
 		if ( document.hasFocus() ) {
-			api
+			return api
 				.get({				
 					"action": "query",
 					"format": "json",
@@ -70,7 +71,13 @@ const App = () => {
 		}
 	}
 
-	window.setInterval(() => mainloop(), waitTimeMilliseconds)
+	window.setInterval(() => {
+		const loop = mainloop();
+		if (loop) {
+			spinner.start();
+			loop.then(() => spinner.stop());
+		}
+	}, waitTimeMilliseconds);
 }
 
 export default App;
